@@ -211,6 +211,11 @@
   .time-check{display:flex;align-items:center;gap:5px;background:var(--bg-card-2);border:1px solid var(--border);border-radius:20px;padding:8px 11px;font-size:12.5px;color:var(--white);white-space:nowrap;}
   .time-check input{accent-color:var(--yellow);width:16px;height:16px;}
   .time-check:has(input:checked){border-color:var(--yellow-dim);background:rgba(255,199,44,.1);color:var(--yellow);}
+  /* 「您現在的狀態」選項較多（4個），用更緊湊的間距與字級，盡量擠進同一行；
+     極窄手機螢幕仍可能自動換行（保留 flex-wrap），但一般手機寬度大多能維持單行 */
+  .time-group-compact{gap:4px;}
+  .time-group-compact .time-check{padding:7px 8px;font-size:11px;gap:3px;}
+  .time-group-compact .time-check input{width:13px;height:13px;flex:none;}
   .facility-check input{accent-color:var(--yellow);}
   .facility-check .fx-del{color:var(--grey);font-size:12px;line-height:1;padding:0 2px;}
   .facility-add-row{display:flex;gap:8px;margin-top:6px;}
@@ -548,7 +553,7 @@
       <input class="field phone-suffix" id="lead-phone" placeholder="12345678" inputmode="numeric" maxlength="8">
     </div>
     <span class="field-label">您現在的狀態</span>
-    <div class="time-group">
+    <div class="time-group time-group-compact">
       <label class="time-check"><input type="radio" name="lead-member-status" value="現為會員">現為會員</label>
       <label class="time-check"><input type="radio" name="lead-member-status" value="非會員">非會員</label>
       <label class="time-check"><input type="radio" name="lead-member-status" value="重新入會">重新入會</label>
