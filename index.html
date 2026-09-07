@@ -154,7 +154,7 @@
   .name-title-group .name-field{width:auto;flex:1 1 92px;min-width:72px;margin-bottom:0;}
   .name-title-group .time-check{flex:none;}
   .phone-group{display:flex;align-items:stretch;gap:8px;margin-bottom:10px;}
-  .phone-prefix{flex:none;display:flex;align-items:center;justify-content:center;height:48px;padding:0 14px;background:var(--bg-card-2);border:1px solid var(--border);border-radius:10px;font-size:16px;color:var(--grey);font-weight:700;}
+  .phone-prefix{flex:none;display:flex;align-items:center;justify-content:center;height:48px;padding:0 16px;background:rgba(255,199,44,.14);border:1px solid var(--yellow-dim);border-radius:10px;font-size:19px;color:var(--yellow);font-weight:900;}
   .phone-suffix{height:48px;margin-bottom:0;letter-spacing:.03em;}
   textarea.field{resize:vertical;min-height:70px;}
   input[type="month"].field{color-scheme:dark;}
@@ -211,11 +211,6 @@
   .time-check{display:flex;align-items:center;gap:5px;background:var(--bg-card-2);border:1px solid var(--border);border-radius:20px;padding:8px 11px;font-size:12.5px;color:var(--white);white-space:nowrap;}
   .time-check input{accent-color:var(--yellow);width:16px;height:16px;}
   .time-check:has(input:checked){border-color:var(--yellow-dim);background:rgba(255,199,44,.1);color:var(--yellow);}
-  /* 「您現在的狀態」選項較多（4個），用比一般 .time-check 稍緊湊的間距與字級，盡量擠進同一行；
-     極窄手機螢幕仍可能自動換行（保留 flex-wrap），但一般手機寬度大多能維持單行 */
-  .time-group-compact{gap:4px;}
-  .time-group-compact .time-check{padding:7px 7px;font-size:12px;gap:3px;}
-  .time-group-compact .time-check input{width:14px;height:14px;flex:none;}
   .facility-check input{accent-color:var(--yellow);}
   .facility-check .fx-del{color:var(--grey);font-size:12px;line-height:1;padding:0 2px;}
   .facility-add-row{display:flex;gap:8px;margin-top:6px;}
@@ -553,7 +548,7 @@
       <input class="field phone-suffix" id="lead-phone" placeholder="12345678" inputmode="numeric" maxlength="8">
     </div>
     <span class="field-label">您現在的狀態</span>
-    <div class="time-group time-group-compact">
+    <div class="time-group">
       <label class="time-check"><input type="radio" name="lead-member-status" value="現為會員">現為會員</label>
       <label class="time-check"><input type="radio" name="lead-member-status" value="非會員">非會員</label>
       <label class="time-check"><input type="radio" name="lead-member-status" value="曾經體驗過">曾經體驗過</label>
