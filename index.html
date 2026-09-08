@@ -46,6 +46,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Noto+Sans+TC:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- 用來把「Peter班表」畫面轉成一張完整圖片，供「下載班表圖片」功能使用 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --bg:#0a0a0a;
@@ -429,6 +431,7 @@
     <div class="cal-grid" id="roster-grid"><div class="cal-dow">日</div><div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow">六</div><div class="cal-day blank"></div><div class="cal-day blank"></div><div class="cal-day "><div class="dnum">1</div></div><div class="cal-day "><div class="dnum">2</div></div><div class="cal-day "><div class="dnum">3</div></div><div class="cal-day "><div class="dnum">4</div></div><div class="cal-day "><div class="dnum">5</div></div><div class="cal-day "><div class="dnum">6</div></div><div class="cal-day "><div class="dnum">7</div></div><div class="cal-day "><div class="dnum">8</div></div><div class="cal-day "><div class="dnum">9</div></div><div class="cal-day "><div class="dnum">10</div></div><div class="cal-day "><div class="dnum">11</div></div><div class="cal-day "><div class="dnum">12</div></div><div class="cal-day "><div class="dnum">13</div></div><div class="cal-day "><div class="dnum">14</div></div><div class="cal-day "><div class="dnum">15</div></div><div class="cal-day "><div class="dnum">16</div></div><div class="cal-day "><div class="dnum">17</div></div><div class="cal-day "><div class="dnum">18</div></div><div class="cal-day "><div class="dnum">19</div></div><div class="cal-day "><div class="dnum">20</div></div><div class="cal-day "><div class="dnum">21</div></div><div class="cal-day "><div class="dnum">22</div></div><div class="cal-day "><div class="dnum">23</div></div><div class="cal-day "><div class="dnum">24</div></div><div class="cal-day "><div class="dnum">25</div></div><div class="cal-day "><div class="dnum">26</div></div><div class="cal-day "><div class="dnum">27</div></div><div class="cal-day "><div class="dnum">28</div></div><div class="cal-day "><div class="dnum">29</div></div><div class="cal-day "><div class="dnum">30</div></div></div>
     <div class="cal-legend" id="roster-legend"><span><span class="legend-dot" style="background:var(--yellow)"></span>上班（當日可預約時段）</span>
        <span><span class="legend-dot" style="background:#555"></span>休假</span></div>
+    <button class="btn btn-outline btn-wide" id="btn-roster-download" style="margin-top:16px;">📥 下載 Peter 彼得｜最新排班表</button>
   </div>
 
   <!-- 常見問題分頁：以下故意留空，JS 會依 SITE_CONFIG.faqs 自動填入問答卡片 -->
@@ -2302,6 +2305,124 @@
       `<span><span class="legend-dot" style="background:var(--yellow)"></span>上班（當日可預約時段）</span>
        <span><span class="legend-dot" style="background:#555"></span>休假</span>`;
   }
+
+  /* ---------- 下載排班表圖片 ----------
+     把「Peter班表」目前顯示的內容（品牌列、Peter大頭照/姓名、月份標題、
+     完整月曆格子、圖例說明）畫成一張跟畫面上一致的完整圖片，
+     讓使用者可以直接下載或分享出去，不需要再截圖。 */
+  async function downloadRosterImage(){
+    const btn = document.getElementById('btn-roster-download');
+    if(!btn) return;
+    if(typeof html2canvas === 'undefined'){
+      showToast('圖片工具載入中，請稍後再試一次');
+      return;
+    }
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ 圖片產生中…';
+
+    let exportWrap = null;
+    try{
+      const ym = ymNow();
+      const total = daysInMonth(ym);
+      const offset = firstDow(ym);
+      const monthData = state.roster[ym] || {};
+      let gridHtml = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+      for(let i=0;i<offset;i++) gridHtml += `<div class="cal-day blank"></div>`;
+      for(let d=1; d<=total; d++){
+        const val = monthData[d] || '';
+        const isWork = val && val !== 'off';
+        const cls = val === 'off' ? 'off' : isWork ? 'work' : '';
+        const tag = val === 'off' ? '休假' : isWork ? shiftLabel(val) : '';
+        gridHtml += `<div class="cal-day ${cls}"><div class="dnum">${d}</div>${tag?`<div class="dtag">${tag}</div>`:''}</div>`;
+      }
+
+      const p = state.profile || {};
+
+      exportWrap = document.createElement('div');
+      exportWrap.style.position = 'fixed';
+      exportWrap.style.left = '-9999px';
+      exportWrap.style.top = '0';
+      exportWrap.style.width = '520px';
+      exportWrap.style.background = '#0a0a0a';
+      exportWrap.style.padding = '24px';
+      exportWrap.style.fontFamily = "'Noto Sans TC',sans-serif";
+      exportWrap.style.color = '#f5f5f5';
+
+      exportWrap.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:16px;border-bottom:1px solid #2b2b2b;margin-bottom:18px;">
+          <div style="width:9px;height:9px;background:#FFC72C;transform:rotate(45deg);flex:none;"></div>
+          <span style="font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;letter-spacing:.08em;color:#FFC72C;">FITNESS FACTORY 健身工廠</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          ${p.photo ? `<img crossorigin="anonymous" src="${escAttr(p.photo)}" style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:2px solid #FFC72C;background:#222;flex:none;">` : ''}
+          <div>
+            <div style="font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;">🥇Peter 彼得｜健體顧問｜健身工廠桃園</div>
+            <div style="color:#FFC72C;font-size:13px;font-weight:600;margin-top:4px;white-space:nowrap;">📍 桃園全區廠館・皆可為您服務</div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;"><div style="font-size:16px;font-weight:700;font-family:'Oswald',sans-serif;">${escHtml(ymLabel(ym))}｜Peter彼得 排班表</div></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">${gridHtml}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12px;color:#9a9a9a;">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:#FFC72C;"></span>上班（當日可預約時段）</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:#555;"></span>休假</span>
+        </div>
+        <div style="margin-top:22px;padding-top:14px;border-top:1px solid #2b2b2b;color:#9a9a9a;font-size:12px;text-align:center;line-height:1.8;white-space:nowrap;">
+          入會方案｜會籍內容｜廠館導覽　歡迎透過Line官方私訊 Peter 彼得 💬
+        </div>
+      `;
+
+      /* 讓月曆格子跟畫面上的樣式一致（上班／休假的顏色與外框） */
+      const style = document.createElement('style');
+      style.textContent = `
+        .cal-day{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;background:#161616;border:1px solid #2b2b2b;box-sizing:border-box;}
+        .cal-day.work{background:rgba(255,199,44,.12);border-color:#a8842a;}
+        .cal-day.work .dnum{color:#FFC72C;}
+        .cal-day.off{background:rgba(255,255,255,.03);}
+        .cal-day.off .dnum{color:#666;}
+        .cal-day.blank{background:transparent;border:none;}
+        .cal-day .dnum{font-weight:700;font-size:13px;}
+        .cal-day .dtag{font-size:11px;font-weight:700;color:#9a9a9a;margin-top:2px;}
+        .cal-day.work .dtag{color:#FFC72C;}
+        .cal-day.off .dtag{color:#aaa;}
+        .cal-dow{text-align:center;font-size:11px;color:#9a9a9a;padding-bottom:4px;}
+      `;
+      exportWrap.prepend(style);
+      document.body.appendChild(exportWrap);
+
+      const canvas = await html2canvas(exportWrap, {
+        backgroundColor: '#0a0a0a',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+
+      await new Promise((resolve)=>{
+        canvas.toBlob((blob)=>{
+          if(!blob){ showToast('圖片產生失敗，請再試一次'); resolve(); return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Peter彼得_${ym}_排班表.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=>URL.revokeObjectURL(url), 4000);
+          showToast('已下載排班表圖片 📥');
+          resolve();
+        }, 'image/png');
+      });
+    }catch(err){
+      console.error('downloadRosterImage error', err);
+      showToast('圖片產生失敗，請再試一次');
+    }finally{
+      if(exportWrap && exportWrap.parentNode) exportWrap.parentNode.removeChild(exportWrap);
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+  const btnRosterDownload = document.getElementById('btn-roster-download');
+  if(btnRosterDownload) btnRosterDownload.addEventListener('click', downloadRosterImage);
 
   /* ---------- FAQ (front) ---------- */
   function renderFaqs(){
